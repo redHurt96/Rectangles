@@ -4,9 +4,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class RectanglesManager : MonoBehaviour, IPointerClickHandler
+public class Manager : MonoBehaviour, IPointerClickHandler
 {
-    public static RectanglesManager instance;
+    public static Manager instance;
 
     public GameObject rectPrefab;
     public Connection connectionPrefab;
@@ -18,6 +18,8 @@ public class RectanglesManager : MonoBehaviour, IPointerClickHandler
     public Transform rectParent;
     public Transform connectionParent;
     public Connection creatingConnection;
+    [Space]
+    public EventSystem eventSystem;
 
     private void Awake()
     {
@@ -43,8 +45,6 @@ public class RectanglesManager : MonoBehaviour, IPointerClickHandler
     /// <param name="eventData">позиция</param>
     void CreateRectangle(PointerEventData eventData)
     {
-        print("create rect");
-
         GameObject rect = Instantiate(rectPrefab, eventData.pointerPressRaycast.worldPosition, Quaternion.identity, rectParent);
         BoxCollider2D box = rect.GetComponent<BoxCollider2D>();
         if (box.OverlapCollider(new ContactFilter2D(), colliders) == 0)

@@ -6,13 +6,14 @@ using UnityEngine.EventSystems;
 public class Connection : MonoBehaviour
 {
     public Rectangle[] rectangles = new Rectangle[2];
-    [HideInInspector]
-    public LineRenderer lineRenderer;
-    [SerializeField] bool coroutineIsRunning = false;
+    LineRenderer lineRenderer;
+    ConnectionRect connectionCollider;
+    bool coroutineIsRunning = false;
     
     private void Awake()
     {
         lineRenderer = GetComponent<LineRenderer>();
+        connectionCollider = transform.GetChild(0).GetComponent<ConnectionRect>();
     }
 
     private void Start()
@@ -37,11 +38,13 @@ public class Connection : MonoBehaviour
     /// <param name="endRect">прямоугольник, к которому протянута связь</param>
     public void EndConnection(Rectangle endRect)
     {
-        print("set conn from " + rectangles[0].name + " " + endRect.name);
-
         coroutineIsRunning = false;
         lineRenderer.SetPosition(1, endRect.transform.position - new Vector3(0f, 0f, lineRenderer.startWidth));
         rectangles[1] = endRect;
+
+        //создание коллайдера для реализации возможности его удаления
+        connectionCollider.gameObject.SetActive(true);
+        connectionCollider.SetRect(lineRenderer.GetPosition(0), lineRenderer.GetPosition(1), lineRenderer.startWidth);
     }
 
     /// <summary>
@@ -52,6 +55,7 @@ public class Connection : MonoBehaviour
     {
         int pointIndex = rectangle == rectangles[0] ? 0 : 1;
         lineRenderer.SetPosition(pointIndex, rectangle.transform.position - new Vector3(0f, 0f, lineRenderer.startWidth));
+        connectionCollider.SetRect(lineRenderer.GetPosition(0), lineRenderer.GetPosition(1), lineRenderer.startWidth);
     }
 
     /// <summary>
@@ -59,7 +63,6 @@ public class Connection : MonoBehaviour
     /// </summary>
     public void DestroyConnection()
     {
-        print("destroy conn");
         coroutineIsRunning = false;
 
         //Стирание ссылок на связь у прямоуольников, между которыми она протянута
@@ -75,14 +78,14 @@ public class Connection : MonoBehaviour
     /// <returns></returns>
     IEnumerator WaitForEndRectangle()
     {
+        if (coroutineIsRunning) yield break;
+
+        coroutineIsRunning = true;
         while(coroutineIsRunning)
         {
             lineRenderer.SetPosition(1, WorldToScreenPoint(Input.mousePosition));
-
             yield return null;
         }
-
-        yield break;
     }
 
     /// <summary>
@@ -92,6 +95,6 @@ public class Connection : MonoBehaviour
     /// <returns></returns>
     public static Vector3 WorldToScreenPoint(Vector3 input)
     {
-        return new Vector3((input.x - Screen.width/2) * RectanglesManager.instance.canvasRect.localScale.x, (input.y - Screen.height * .5f) * RectanglesManager.instance.canvasRect.localScale.y, 0f);
+        return new Vector3((input.x - Screen.width/2) * Manager.instance.canvasRect.localScale.x, (input.y - Screen.height * .5f) * Manager.instance.canvasRect.localScale.y, 0f);
     }
 }

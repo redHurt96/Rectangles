@@ -34,7 +34,7 @@ public class Rectangle : MonoBehaviour, IDragHandler, IPointerClickHandler
         if (eventData.button == PointerEventData.InputButton.Right)
         {
             //Если в данный момент не создается связь, то создаем
-            if (RectanglesManager.instance.creatingConnection == null)
+            if (Manager.instance.creatingConnection == null)
             {
                 CreateConnection();
             }
@@ -53,9 +53,9 @@ public class Rectangle : MonoBehaviour, IDragHandler, IPointerClickHandler
     /// </summary>
     public void CreateConnection()
     {
-        Connection newConnection = Instantiate(RectanglesManager.instance.connectionPrefab, Connection.WorldToScreenPoint(Input.mousePosition), Quaternion.identity, RectanglesManager.instance.connectionParent);
+        Connection newConnection = Instantiate(Manager.instance.connectionPrefab, Connection.WorldToScreenPoint(Input.mousePosition), Quaternion.identity, Manager.instance.connectionParent);
         newConnection.SetConnection(this);
-        RectanglesManager.instance.creatingConnection = newConnection;
+        Manager.instance.creatingConnection = newConnection;
         addingConnections.Add(newConnection);
     }
 
@@ -65,17 +65,14 @@ public class Rectangle : MonoBehaviour, IDragHandler, IPointerClickHandler
     public void EndConnection()
     {
         //Если к выбранному прямоугольнику еще не создана связь из начального, завершаем создание связи
-        if (CheckEndRectangleToConnection(this, RectanglesManager.instance.creatingConnection.rectangles[0]))
+        if (CheckEndRectangleToConnection(this, Manager.instance.creatingConnection.rectangles[0]))
         {
-            RectanglesManager.instance.creatingConnection.EndConnection(this);
-            addingConnections.Add(RectanglesManager.instance.creatingConnection);
-            RectanglesManager.instance.creatingConnection = null;
+            Manager.instance.creatingConnection.EndConnection(this);
+            addingConnections.Add(Manager.instance.creatingConnection);
+            Manager.instance.creatingConnection = null;
         }
         //Иначе уничтожаем связь
-        else
-        {
-            RectanglesManager.instance.creatingConnection.DestroyConnection();
-        }
+        else Manager.instance.creatingConnection.DestroyConnection();
     }
 
     /// <summary>
@@ -89,7 +86,7 @@ public class Rectangle : MonoBehaviour, IDragHandler, IPointerClickHandler
         foreach (Connection connection in connections)
             connection.DestroyConnection();
 
-        RectanglesManager.instance.colliders.Remove(this.GetComponent<Collider2D>());
+        Manager.instance.colliders.Remove(this.GetComponent<Collider2D>());
         Destroy(this.gameObject);
     } 
 
@@ -103,9 +100,7 @@ public class Rectangle : MonoBehaviour, IDragHandler, IPointerClickHandler
 
         //Передвигаем все связи вслед за прямоугольником
         foreach (Connection item in addingConnections)
-        {
             item.Move(this);
-        }
     }
 
     /// <summary>
@@ -117,13 +112,9 @@ public class Rectangle : MonoBehaviour, IDragHandler, IPointerClickHandler
     public static bool CheckEndRectangleToConnection(Rectangle first, Rectangle second)
     {
         foreach (Connection connection in first.addingConnections)
-        {
             if (connection.rectangles[0] == second || connection.rectangles[1] == second)
-            {
-                print("false");
                 return false;
-            }
-        }
+
         return true;
     }
     #endregion
